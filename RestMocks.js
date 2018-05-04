@@ -2,6 +2,8 @@ const uid = require("uid");
 const WSSecurityCert = require('soap').WSSecurityCert;
 const hentNyeForsendelser = require('./testdata/hentNyeForsendelser')
 const config = require('./config');
+const receiveDPV = require("./modules/DPV/DPV").receiveDPV;
+
 
 
 const mocks = [
@@ -30,6 +32,16 @@ const mocks = [
                     console.log( req.params.forsendelseid);
                     res.send('Ok');
                 }
+            }
+        ]
+    },
+    {
+        name: 'DPV',
+        routes: [
+            {
+                path: '/dpv/*',
+                method: 'POST',
+                responseFunction: receiveDPV
             }
         ]
     },
@@ -76,7 +88,7 @@ const mocks = [
                         ${publicKey}
                         -----END CERTIFICATE-----`});
 
-                    let signature = new ws.Signature(x509)
+                    let signature = new ws.Signature(x509);
 
                     signature.addReference("//*[local-name(.)='Body']");
                     signature.addReference("//*[local-name(.)='Timestamp']");
