@@ -77,6 +77,4 @@ console.log('SOAP mocks: \n');
 console.log(soapString.join('\n'));
 
 
-
-
-
+module.exports = app;
