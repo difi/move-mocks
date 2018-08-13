@@ -223,6 +223,42 @@ const mocks = [
                     if (req.headers.soapaction === "\"http://www.altinn.no/services/ServiceEngine/Broker/2015/06/IBrokerServiceExternalBasicStreamed/DownloadFileStreamedBasic\"") {
                         res.send(DownloadFileStreamedBasic());
                     } else if (req.headers.soapaction === "\"http://www.altinn.no/services/ServiceEngine/Broker/2015/06/IBrokerServiceExternalBasicStreamed/UploadFileStreamedBasic\""){
+                        var multiparty = require('multiparty');
+                        var util = require('util');
+                        var form = new multiparty.Form({
+                            autoFiles: true,
+                            uploadDir: __dirname + '/uploads'
+                        });
+
+
+                        form.parse(req);
+                        console.log('laebk');
+
+                        // form.on('part', function(part) {
+                        //     // You *must* act on the part by reading it
+                        //     // NOTE: if you want to ignore it, just call "part.resume()"
+                        //
+                        //     if (!part.filename) {
+                        //         // filename is not defined when this is a field and not a file
+                        //         console.log('got field named ' + part.name);
+                        //         // ignore field's content
+                        //         part.resume();
+                        //     }
+                        //
+                        //     if (part.filename) {
+                        //         // filename is defined when this is a file
+                        //         count++;
+                        //         console.log('got file named ' + part.name);
+                        //         // ignore file's content here
+                        //         part.resume();
+                        //     }
+                        //
+                        //     part.on('error', function(err) {
+                        //         // decide what to do
+                        //     });
+                        // });
+
+
                         global.messageCount = global.messageCount + 1;
                         res.send(UploadFileStreamedBasic())
                     }
