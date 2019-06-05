@@ -2,25 +2,23 @@ package com.example.dpimock;
 
 import model.Message;
 import model.MessagesSingleton;
-
 import no.difi.commons.sbdh.jaxb.*;
 import no.difi.oxalis.api.model.Direction;
+import no.difi.oxalis.api.timestamp.Timestamp;
 import org.oasis_open.docs.ebxml_bp.ebbp_signals_2.MessagePartNRInformation;
 import org.oasis_open.docs.ebxml_bp.ebbp_signals_2.NonRepudiationInformation;
-import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.*;
-import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.MessageInfo;
 import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.Error;
-import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.Description;
+import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.MessageInfo;
+import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.*;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+import org.springframework.ws.soap.SoapHeaderElement;
 import org.springframework.ws.soap.saaj.SaajSoapMessage;
 import org.springframework.ws.soap.server.endpoint.annotation.SoapAction;
 import org.w3.xmldsig.ReferenceType;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import util.*;
 
 import javax.xml.bind.JAXBElement;
@@ -30,10 +28,10 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.soap.*;
-import no.difi.oxalis.api.timestamp.Timestamp;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -45,32 +43,21 @@ public class DPIEndpoint {
 
     private static final String NAMESPACE_URI = "http://www.unece.org/cefact/namespaces/StandardBusinessDocumentHeader";
 
-    public String soapMessageToString(SOAPMessage message)
-    {
+    public String soapMessageToString(SOAPMessage message) {
         String result = null;
 
-        if (message != null)
-        {
+        if (message != null) {
             ByteArrayOutputStream baos = null;
-            try
-            {
+            try {
                 baos = new ByteArrayOutputStream();
                 message.writeTo(baos);
                 result = baos.toString();
-            }
-            catch (Exception e)
-            {
-            }
-            finally
-            {
-                if (baos != null)
-                {
-                    try
-                    {
+            } catch (Exception e) {
+            } finally {
+                if (baos != null) {
+                    try {
                         baos.close();
-                    }
-                    catch (IOException ioe)
-                    {
+                    } catch (IOException ioe) {
                     }
                 }
             }
@@ -79,7 +66,7 @@ public class DPIEndpoint {
     }
 
     @SuppressWarnings("Duplicates")
-    @SoapAction(value="")
+    @SoapAction(value = "")
     public void receipt(MessageContext context) throws DatatypeConfigurationException, SOAPException {
         SaajSoapMessage message = (SaajSoapMessage) context.getRequest();
 
@@ -112,7 +99,7 @@ public class DPIEndpoint {
             e.printStackTrace();
         }
 
-        SaajSoapMessage webServiceMessage = (SaajSoapMessage)context.getResponse();
+        SaajSoapMessage webServiceMessage = (SaajSoapMessage) context.getResponse();
 
         webServiceMessage.setSaajMessage(response);
 
@@ -129,18 +116,18 @@ public class DPIEndpoint {
                                           String refToMessageId,
                                           List<ReferenceType> referenceList) throws OxalisAs4Exception, DatatypeConfigurationException, SOAPException {
         SignalMessage signalMessage;
-        SOAPHeaderElement messagingHeader;
+//        SOAPHeaderElement messagingHeader;
         SOAPMessage message;
+        SOAPHeader soapHeader;
+        SOAPHeaderElement messagingHeader;
         try {
 
             MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
             message = messageFactory.createMessage();
 
-            SOAPHeader soapHeader = message.getSOAPHeader();
-
+            soapHeader = message.getSOAPHeader();
             messagingHeader = soapHeader.addHeaderElement(Constants.MESSAGING_QNAME);
             messagingHeader.setMustUnderstand(true);
-
         } catch (SOAPException e) {
             throw new OxalisAs4Exception("Could not create SOAP message", e);
         }
@@ -180,7 +167,7 @@ public class DPIEndpoint {
 
 
         if (MessagesSingleton.getInstance().messages.size() > 0) {
-           // MessagesSingleton.getInstance().messages.remove(0);
+            // MessagesSingleton.getInstance().messages.remove(0);
             MessagesSingleton messages = MessagesSingleton.getInstance();
             StandardBusinessDocumentHeader header = new StandardBusinessDocumentHeader();
             header.setHeaderVersion("1.0");
@@ -188,7 +175,7 @@ public class DPIEndpoint {
             // Set sender:
             List<Partner> partners = header.getSender();
             Partner partner = new Partner();
-            PartnerIdentification partnerIdentification =  new PartnerIdentification();
+            PartnerIdentification partnerIdentification = new PartnerIdentification();
             partnerIdentification.setValue(messages.messages.get(0).getSenderOrgNum());
             partnerIdentification.setAuthority("urn:oasis:names:tc:ebcore:partyid-type:iso6523:9908");
             partner.setIdentifier(partnerIdentification);
@@ -227,14 +214,7 @@ public class DPIEndpoint {
 
             header.setBusinessScope(businessScope);
 
-            StandardBusinessDocument sbd = new StandardBusinessDocument();
-            sbd.setStandardBusinessDocumentHeader(header);
-
             SOAPBody soapBody = message.getSOAPBody();
-//            SOAPBodyElement sbdBodyElement = soapBody.addBodyElement(Constants.SBD_QNAME);
-
-            JAXBElement<StandardBusinessDocument> sbdJAXBElement = new JAXBElement<>(Constants.SBD_QNAME,
-                    (Class<StandardBusinessDocument>) sbd.getClass(), sbd);
 
             PartyId fromPartyId = PartyId.builder().withType("urn:oasis:names:tc:ebcore:partyid-type:iso6523:9908").withValue(messages.messages.get(0).getReceiverOrgNum()).build();
 
@@ -264,15 +244,24 @@ public class DPIEndpoint {
                     .build();
             userMessage.setMpc("urn:normal:no.difi.move.integrasjonspunkt-dev");
 
-            JAXBElement<UserMessage> userMessageJAXBElement;
 
-            userMessageJAXBElement = new JAXBElement<>(Constants.USER_MESSAGE_QNAME,
+//            JAXBElement<UserMessage> userMessageJAXBElement;
+//
+//            userMessageJAXBElement = new JAXBElement<>(Constants.USER_MESSAGE_QNAME,
+//                    (Class<UserMessage>) userMessage.getClass(), userMessage);
+
+            SOAPBodyElement sbdBodyElement = soapBody.addBodyElement(Constants.SBD_QNAME);
+
+            JAXBElement<StandardBusinessDocumentHeader> headerJAXBElement = new JAXBElement<>(Constants.SBD_HEADER_QNAME,
+                    (Class<StandardBusinessDocumentHeader>) header.getClass(), header);
+
+            JAXBElement<UserMessage> userMessageElement = new JAXBElement<>(Constants.USER_MESSAGE_QNAME,
                     (Class<UserMessage>) userMessage.getClass(), userMessage);
 
             try {
                 Marshaller marshaller = Marshalling.getInstance().getJaxbContext().createMarshaller();
-                marshaller.marshal(sbdJAXBElement, soapBody);
-                marshaller.marshal(userMessageJAXBElement, messagingHeader);
+                marshaller.marshal(headerJAXBElement, sbdBodyElement);
+                marshaller.marshal(userMessageElement, messagingHeader);
             } catch (JAXBException e) {
                 throw new OxalisAs4Exception("Could not marshal signal message to header", e);
             }
@@ -297,13 +286,13 @@ public class DPIEndpoint {
                     //.withReceipt(Receipt.builder().withAny(nri).build())
                     .build();
 
-            JAXBElement<SignalMessage> signalMessageJAXBElement;
-            signalMessageJAXBElement = new JAXBElement<>(Constants.SIGNAL_MESSAGE_QNAME,
+
+            JAXBElement<SignalMessage> signalMessageElement = new JAXBElement<>(Constants.SIGNAL_MESSAGE_QNAME,
                     (Class<SignalMessage>) signalMessage.getClass(), signalMessage);
 
             try {
                 Marshaller marshaller = Marshalling.getInstance().getJaxbContext().createMarshaller();
-                marshaller.marshal(signalMessageJAXBElement, messagingHeader);
+                marshaller.marshal(signalMessageElement, messagingHeader);
             } catch (JAXBException e) {
                 throw new OxalisAs4Exception("Could not marshal signal message to header", e);
             }
@@ -349,7 +338,7 @@ public class DPIEndpoint {
 
         SOAPMessage response = createSOAPResponse(ts, envelopeHeader.getMessageId(), referenceList);
 
-        SaajSoapMessage webServiceMessage = (SaajSoapMessage)context.getResponse();
+        SaajSoapMessage webServiceMessage = (SaajSoapMessage) context.getResponse();
 
         webServiceMessage.setSaajMessage(response);
     }
@@ -371,8 +360,8 @@ public class DPIEndpoint {
 
     /**
      * Create a message in memory that we expose in the incoming messages API.
-     * **/
-    private void saveIncomingMessage(As4EnvelopeHeader header){
+     **/
+    private void saveIncomingMessage(As4EnvelopeHeader header) {
         Message dbMessage = new Message();
         dbMessage.setConversationId(header.getConversationId());
         dbMessage.setSenderOrgNum(header.getFromPartyId().get(0));
@@ -471,19 +460,18 @@ public class DPIEndpoint {
                 .withReceipt(Receipt.builder().withAny(nri).build())
                 .build();
 
-        JAXBElement<SignalMessage> userMessageJAXBElement = new JAXBElement<>(Constants.SIGNAL_MESSAGE_QNAME,
+        JAXBElement<SignalMessage> signalMessageJAXBElement = new JAXBElement<>(Constants.SIGNAL_MESSAGE_QNAME,
                 (Class<SignalMessage>) signalMessage.getClass(), signalMessage);
 
         try {
             Marshaller marshaller = Marshalling.getInstance().getJaxbContext().createMarshaller();
-            marshaller.marshal(userMessageJAXBElement, messagingHeader);
+            marshaller.marshal(signalMessageJAXBElement, messagingHeader);
         } catch (JAXBException e) {
             throw new OxalisAs4Exception("Could not marshal signal message to header", e);
         }
 
         return message;
     }
-
 
 
 }
