@@ -2,15 +2,16 @@ package com.example.dpimock;
 
 import model.Message;
 import model.MessagesSingleton;
-
+import no.difi.begrep.sdp.schema_v10.Kvittering;
+import no.difi.begrep.sdp.schema_v10.Levering;
 import no.difi.commons.sbdh.jaxb.*;
 import no.difi.oxalis.api.model.Direction;
+import no.difi.oxalis.api.timestamp.Timestamp;
 import org.oasis_open.docs.ebxml_bp.ebbp_signals_2.MessagePartNRInformation;
 import org.oasis_open.docs.ebxml_bp.ebbp_signals_2.NonRepudiationInformation;
-import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.*;
-import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.MessageInfo;
 import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.Error;
-import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.Description;
+import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.MessageInfo;
+import org.oasis_open.docs.ebxml_msg.ebms.v3_0.ns.core._200704.*;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -19,8 +20,6 @@ import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 import org.springframework.ws.soap.saaj.SaajSoapMessage;
 import org.springframework.ws.soap.server.endpoint.annotation.SoapAction;
 import org.w3.xmldsig.ReferenceType;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import util.*;
 
 import javax.xml.bind.JAXBElement;
@@ -30,10 +29,13 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.soap.*;
-import no.difi.oxalis.api.timestamp.Timestamp;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -80,7 +82,7 @@ public class DPIEndpoint {
 
     @SuppressWarnings("Duplicates")
     @SoapAction(value="")
-    public void receipt(MessageContext context) throws DatatypeConfigurationException, SOAPException {
+    public void receipt(MessageContext context) throws DatatypeConfigurationException, SOAPException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         SaajSoapMessage message = (SaajSoapMessage) context.getRequest();
 
         SOAPMessage soapMessage = message.getSaajMessage();
@@ -115,19 +117,12 @@ public class DPIEndpoint {
         SaajSoapMessage webServiceMessage = (SaajSoapMessage)context.getResponse();
 
         webServiceMessage.setSaajMessage(response);
-
-        System.out.println("\n\n\n\n");
-
-        System.out.println(soapMessageToString(response));
-
-        System.out.println("\n\n\n\n");
-
     }
 
     @SuppressWarnings("Duplicates")
     private SOAPMessage createSOAPReceipt(Timestamp ts,
                                           String refToMessageId,
-                                          List<ReferenceType> referenceList) throws OxalisAs4Exception, DatatypeConfigurationException, SOAPException {
+                                          List<ReferenceType> referenceList) throws OxalisAs4Exception, DatatypeConfigurationException, SOAPException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         SignalMessage signalMessage;
         SOAPHeaderElement messagingHeader;
         SOAPMessage message;
@@ -229,6 +224,17 @@ public class DPIEndpoint {
 
             StandardBusinessDocument sbd = new StandardBusinessDocument();
             sbd.setStandardBusinessDocumentHeader(header);
+
+            Kvittering kvittering = new Kvittering();
+
+            GregorianCalendar gcal = (GregorianCalendar) GregorianCalendar.getInstance();
+            kvittering.setTidspunkt(DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal));
+
+            Levering levering = new Levering();
+
+            kvittering.setLevering(levering);
+
+            sbd = SBDReceiptFactory.signAndWrapDocument(sbd, kvittering);
 
             SOAPBody soapBody = message.getSOAPBody();
 //            SOAPBodyElement sbdBodyElement = soapBody.addBodyElement(Constants.SBD_QNAME);
