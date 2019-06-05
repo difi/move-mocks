@@ -47,32 +47,21 @@ public class DPIEndpoint {
 
     private static final String NAMESPACE_URI = "http://www.unece.org/cefact/namespaces/StandardBusinessDocumentHeader";
 
-    public String soapMessageToString(SOAPMessage message)
-    {
+    public String soapMessageToString(SOAPMessage message) {
         String result = null;
 
-        if (message != null)
-        {
+        if (message != null) {
             ByteArrayOutputStream baos = null;
-            try
-            {
+            try {
                 baos = new ByteArrayOutputStream();
                 message.writeTo(baos);
                 result = baos.toString();
-            }
-            catch (Exception e)
-            {
-            }
-            finally
-            {
-                if (baos != null)
-                {
-                    try
-                    {
+            } catch (Exception e) {
+            } finally {
+                if (baos != null) {
+                    try {
                         baos.close();
-                    }
-                    catch (IOException ioe)
-                    {
+                    } catch (IOException ioe) {
                     }
                 }
             }
@@ -81,7 +70,7 @@ public class DPIEndpoint {
     }
 
     @SuppressWarnings("Duplicates")
-    @SoapAction(value="")
+    @SoapAction(value = "")
     public void receipt(MessageContext context) throws DatatypeConfigurationException, SOAPException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         SaajSoapMessage message = (SaajSoapMessage) context.getRequest();
 
@@ -114,7 +103,7 @@ public class DPIEndpoint {
             e.printStackTrace();
         }
 
-        SaajSoapMessage webServiceMessage = (SaajSoapMessage)context.getResponse();
+        SaajSoapMessage webServiceMessage = (SaajSoapMessage) context.getResponse();
 
         webServiceMessage.setSaajMessage(response);
     }
@@ -175,7 +164,7 @@ public class DPIEndpoint {
 
 
         if (MessagesSingleton.getInstance().messages.size() > 0) {
-           // MessagesSingleton.getInstance().messages.remove(0);
+            // MessagesSingleton.getInstance().messages.remove(0);
             MessagesSingleton messages = MessagesSingleton.getInstance();
             StandardBusinessDocumentHeader header = new StandardBusinessDocumentHeader();
             header.setHeaderVersion("1.0");
@@ -183,7 +172,7 @@ public class DPIEndpoint {
             // Set sender:
             List<Partner> partners = header.getSender();
             Partner partner = new Partner();
-            PartnerIdentification partnerIdentification =  new PartnerIdentification();
+            PartnerIdentification partnerIdentification = new PartnerIdentification();
             partnerIdentification.setValue(messages.messages.get(0).getSenderOrgNum());
             partnerIdentification.setAuthority("urn:oasis:names:tc:ebcore:partyid-type:iso6523:9908");
             partner.setIdentifier(partnerIdentification);
@@ -205,7 +194,7 @@ public class DPIEndpoint {
 
             documentIdentification.setStandard("urn:no:difi:sdp:1.0");
             documentIdentification.setTypeVersion("1.0");
-            documentIdentification.setInstanceIdentifier(messages.messages.get(0).getConversationId());
+            documentIdentification.setInstanceIdentifier(messages.messages.get(0).getMessageId());
             documentIdentification.setType("kvittering");
             documentIdentification.setCreationDateAndTime(toXMLGregorianCalendar(OffsetDateTime.now()));
 
@@ -216,7 +205,7 @@ public class DPIEndpoint {
             List<Scope> scopes = businessScope.getScope();
             Scope scope = new Scope();
             scope.setType("ConversationId");
-            scope.setInstanceIdentifier(messages.messages.get(0).getMessageId());
+            scope.setInstanceIdentifier(messages.messages.get(0).getConversationId());
             scope.setIdentifier("urn:no:difi:sdp:1.0");
             scopes.add(scope);
 
@@ -355,7 +344,7 @@ public class DPIEndpoint {
 
         SOAPMessage response = createSOAPResponse(ts, envelopeHeader.getMessageId(), referenceList);
 
-        SaajSoapMessage webServiceMessage = (SaajSoapMessage)context.getResponse();
+        SaajSoapMessage webServiceMessage = (SaajSoapMessage) context.getResponse();
 
         webServiceMessage.setSaajMessage(response);
     }
@@ -377,8 +366,8 @@ public class DPIEndpoint {
 
     /**
      * Create a message in memory that we expose in the incoming messages API.
-     * **/
-    private void saveIncomingMessage(As4EnvelopeHeader header){
+     **/
+    private void saveIncomingMessage(As4EnvelopeHeader header) {
         Message dbMessage = new Message();
         dbMessage.setConversationId(header.getConversationId());
         dbMessage.setSenderOrgNum(header.getFromPartyId().get(0));
@@ -478,7 +467,7 @@ public class DPIEndpoint {
                 .build();
 
         JAXBElement<SignalMessage> userMessageJAXBElement = new JAXBElement<>(Constants.SIGNAL_MESSAGE_QNAME,
-                (Class<SignalMessage>) signalMessage.getClass(), signalMessage);
+                SignalMessage.class, signalMessage);
 
         try {
             Marshaller marshaller = Marshalling.getInstance().getJaxbContext().createMarshaller();
@@ -489,7 +478,6 @@ public class DPIEndpoint {
 
         return message;
     }
-
 
 
 }
