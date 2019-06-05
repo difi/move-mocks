@@ -164,7 +164,6 @@ public class DPIEndpoint {
 
 
         if (MessagesSingleton.getInstance().messages.size() > 0) {
-            // MessagesSingleton.getInstance().messages.remove(0);
             MessagesSingleton messages = MessagesSingleton.getInstance();
             StandardBusinessDocumentHeader header = new StandardBusinessDocumentHeader();
             header.setHeaderVersion("1.0");
@@ -194,7 +193,7 @@ public class DPIEndpoint {
 
             documentIdentification.setStandard("urn:no:difi:sdp:1.0");
             documentIdentification.setTypeVersion("1.0");
-            documentIdentification.setInstanceIdentifier(messages.messages.get(0).getMessageId());
+            documentIdentification.setInstanceIdentifier(messages.messages.get(0).getConversationId());
             documentIdentification.setType("kvittering");
             documentIdentification.setCreationDateAndTime(toXMLGregorianCalendar(OffsetDateTime.now()));
 
@@ -226,7 +225,6 @@ public class DPIEndpoint {
             sbd = SBDReceiptFactory.signAndWrapDocument(sbd, kvittering);
 
             SOAPBody soapBody = message.getSOAPBody();
-//            SOAPBodyElement sbdBodyElement = soapBody.addBodyElement(Constants.SBD_QNAME);
 
             JAXBElement<StandardBusinessDocument> sbdJAXBElement = new JAXBElement<>(Constants.SBD_QNAME,
                     (Class<StandardBusinessDocument>) sbd.getClass(), sbd);
@@ -239,7 +237,7 @@ public class DPIEndpoint {
                     .withAgreementRef(AgreementRef.builder().withValue("http://begrep.difi.no/SikkerDigitalPost/1.0/transportlag/Meldingsutveksling/FormidleDigitalPostForsendelse").build())
                     .withService(Service.builder().withValue("SDP").build())
                     .withAction("KvitteringsForespoersel")
-                    .withConversationId(messages.messages.get(0).getMessageId())
+                    .withConversationId(messages.messages.get(0).getConversationId())
                     .build();
 
             UserMessage userMessage = UserMessage.builder()
@@ -271,8 +269,7 @@ public class DPIEndpoint {
             } catch (JAXBException e) {
                 throw new OxalisAs4Exception("Could not marshal signal message to header", e);
             }
-
-
+            MessagesSingleton.getInstance().messages.remove(0);
         } else {
             Error error = Error.builder()
                     .withCategory("Communication")
@@ -336,7 +333,7 @@ public class DPIEndpoint {
 
         As4EnvelopeHeader envelopeHeader = parseAs4EnvelopeHeader(userMessage);
 
-        saveIncomingMessage(envelopeHeader);
+        saveIncomingMessage(sbd);
 
         Timestamp ts = getTimestamp(soapMessage);
 
@@ -367,12 +364,14 @@ public class DPIEndpoint {
     /**
      * Create a message in memory that we expose in the incoming messages API.
      **/
-    private void saveIncomingMessage(As4EnvelopeHeader header) {
+    private void saveIncomingMessage(StandardBusinessDocument sbd) {
+
+        //sbd.standardBusinessDocumentHeader.businessScope.scope.get(0).instanceIdentifier
+
         Message dbMessage = new Message();
-        dbMessage.setConversationId(header.getConversationId());
-        dbMessage.setSenderOrgNum(header.getFromPartyId().get(0));
-        dbMessage.setReceiverOrgNum(header.getToPartyId().get(0));
-        dbMessage.setMessageId(header.getMessageId());
+        dbMessage.setConversationId(sbd.getStandardBusinessDocumentHeader().getBusinessScope().getScope().get(0).getInstanceIdentifier());
+        dbMessage.setSenderOrgNum(sbd.getStandardBusinessDocumentHeader().getSender().get(0).getIdentifier().getValue());
+        dbMessage.setReceiverOrgNum(sbd.getStandardBusinessDocumentHeader().getReceiver().get(0).getIdentifier().getValue());
         MessagesSingleton.getInstance().addMessage(dbMessage);
 
     }
