@@ -90,7 +90,7 @@ async function sendMessages(){
             if (res) {
                 console.log("Sendt DPV message OK.");
             }
-        } catch(e) {
+        } catch(err) {
             console.log(JSON.stringify(err, null, 2));
             console.log('DPV message failed.');
         }
@@ -105,7 +105,7 @@ async function sendMessages(){
             if (res) {
                 console.log("Sendt DPF message OK.");
             }
-        } catch (e) {
+        } catch (err) {
             console.log(JSON.stringify(err, null, 2));
             console.log("DPF message failed.");
         }
@@ -132,7 +132,7 @@ async function sendMessages(){
         // DPE message
         try {
             let res = await sendLargeMessage(
-                dpeSbd(910076787, 910076787,"innsynskrav")
+                dpeSbd(910075918, 910076787,"innsynskrav")
             );
             if (res){
                 console.log("Sent DPE message successfully");
