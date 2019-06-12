@@ -221,7 +221,7 @@ function UploadFileStreamedBasic(req, res) {
                                                          <ns:ReceiptTypeName>?</ns:ReceiptTypeName>
                                                       </ns:ReceiptExternalStreamedBE>
                                                    </soapenv:Body>
-                                                </soapenv:Envelope>`)
+                                                </soapenv:Envelope>`);
                                 } else {
                                     console.log(err);
                                 }
