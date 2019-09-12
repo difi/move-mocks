@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 let fileName = 'test.pdf';
 
+
 function sendFile(fileName, messageId){
     return new Promise((resolve, reject) => {
         fs.createReadStream(path.join(__dirname, fileName))
@@ -18,8 +19,10 @@ function sendFile(fileName, messageId){
                 encoding: null
             }, (error, response, body) => {
                 if (error) {
+                    console.log("err")
                     reject(error);
                 } else {
+                    console.log(body)
                     resolve(response)
                 }
             }))
@@ -70,19 +73,20 @@ async function sendLargeMessage(sbd) {
 function sendNextMoveMessage(payload){
     return new Promise(async (resolve, reject) => {
 
-        let fileSize = getFilesize('200kb');
-
-        crypto.randomBytes(fileSize, (err, buffer) => {
-
-            if (err) {
-                reject(err);
-            } else {
-                fs.writeFile(path.join(__dirname, fileName), buffer, (err) => {
-                    if (err) {
-                        console.log(err);
-                        reject(err)
-                    } else {
-
+        // let fileSize = getFilesize('200kb');
+        //
+        // crypto.randomBytes(fileSize, (err, buffer) => {
+        //
+        //     if (err) {
+        //         reject(err);
+        //     } else {
+        //         fs.writeFile(path.join(__dirname, fileName), "{\"a\": \"b\"}", (err) => {
+        //             if (err) {
+        //                 console.log(err);
+        //                 reject(err)
+        //
+        //             } else {
+        //
                         console.time("totalTime");
 
                         sendLargeMessage(payload).then((messageId) => {
@@ -96,18 +100,18 @@ function sendNextMoveMessage(payload){
                                     console.log(err);
                                 } else {
                                     console.log("Messages sent, file deleted");
-                                    console.log(`Attachment file size was: ${fileSize}.`);
+                                    // console.log(`Attachment file size was: ${fileSize}.`);
                                 }
                             })
                         }).catch((err) => {
                             console.log(err);
                             reject(err);
                         });
-                    }
-                });
-            }
-        });
+        //             }
+        //         });
+        //     }
+        // });
     })
 }
 
-module.exports = { sendNextMoveMessage };
+module.exports = { sendNextMoveMessage, sendFile };
