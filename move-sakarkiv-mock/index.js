@@ -16,6 +16,7 @@ process.env.ORG_NUM = process.env.ORG_NUM || 991825827;
 process.env.ORG_NAME = process.env.ORG_NAME || "DIREKTORATET FOR FORVALTNING OG IKT";
 process.env.EMAIL = process.env.EMAIL || "idporten@difi.no";
 process.env.IP_URL = process.env.IP_URL || "http://localhost:9094";
+process.env.ENABLE_POLLING = process.env.ENABLE_POLLING || true;
 
 console.log(process.env);
 
@@ -26,7 +27,9 @@ app.use(morgan('combined'));
 
 global.dpeDB = [];
 
-poll();
+if(process.env.ENABLE_POLLING != "false"){
+    poll();
+}
 // pollMessage();
 
 app.use(express.static(`${__dirname}/client/build`));
