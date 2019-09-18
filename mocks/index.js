@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const messageTable = require('./src/components/messageTable').messageTable;
-const { deleteDirectoryRecursive } = require('./src/modules/helper');
+const {deleteDirectoryRecursive} = require('./src/modules/helper');
 const fs = require('fs');
 const request = require('superagent');
 
@@ -35,6 +35,7 @@ global.messageLog.set('dpf', []);
 global.messageLog.set('dpv', []);
 global.messageLog.set('dpo', []);
 
+process.env.MOCK_HOST = process.env.MOCK_HOST || 'localhost';
 process.env.PORT = process.env.PORT || 8001;
 
 let app = express();
@@ -47,13 +48,13 @@ app.use(morgan('combined'));
 app.get('/', (req, res) => {
 
     /**
-    * Set up headers for use in the frontend view of received messages.
-    * */
+     * Set up headers for use in the frontend view of received messages.
+     * */
 
     let headers = [
         {
             serviceIdentifier: 'dpf',
-            headers:[
+            headers: [
                 {
                     title: 'Sender orgNum',
                     accessor: 'senderOrgNum',
@@ -70,7 +71,7 @@ app.get('/', (req, res) => {
         },
         {
             serviceIdentifier: 'dpv',
-            headers:[
+            headers: [
                 {
                     title: 'Sender orgnum',
                     accessor: 'senderOrgNum',
@@ -176,41 +177,41 @@ app.get('/', (req, res) => {
  * Deletes all files in a directory, but creates a .gitkeep file
  * so that the directory is kept in sourcecontrol.
  * */
-function deleteFiles(directory){
+function deleteFiles(directory) {
     return new Promise((resolve, reject) => {
         deleteDirectoryRecursive(directory, false)
             .then(() => {
                 fs.writeFile(`${directory}/.gitkeep`, "", (err) => {
-                    if(err) {
+                    if (err) {
                         reject(err)
                     }
                     resolve("The file was saved!")
                 });
             }).catch((err) => {
-                reject(err)
-            })
+            reject(err)
+        })
     });
 }
 
 /**
  * Clears the message log from the dpi mock.
  * */
-function deleteDPIMessageLog(){
+function deleteDPIMessageLog() {
     return new Promise((resolve, reject) => {
         request.delete(`http://${process.env.DPI_HOST}:${process.env.DPI_PORT}/api/messages/log`)
             .then((response) => {
                 resolve();
             }).catch((err) => {
-                console.log(err);
-                reject();
-            })
+            console.log(err);
+            reject();
+        })
     })
 }
 
 /**
  * Deletes messages from the dpi mock.
  * */
-function deleteDPIMessages(){
+function deleteDPIMessages() {
     return new Promise((resolve, reject) => {
         request.delete(`http://${process.env.DPI_HOST}:${process.env.DPI_PORT}/api/messages`)
             .then((response) => {
@@ -249,11 +250,11 @@ app.get('/api/messages', (req, res) => {
             res.send(returnMessages);
 
         }).catch((err) => {
-            console.log('DPI fetch messages failed!');
-            console.log(err);
-            // Return the other messages even though DPI fails.
-            // TODO: Possibly include a message in the response to let frontend know DPI has failed.
-            res.send(returnMessages);
+        console.log('DPI fetch messages failed!');
+        console.log(err);
+        // Return the other messages even though DPI fails.
+        // TODO: Possibly include a message in the response to let frontend know DPI has failed.
+        res.send(returnMessages);
     });
 });
 
@@ -265,20 +266,20 @@ app.delete('/api/messages/:serviceIdentifier', (req, res) => {
     if ("DPV" === req.params.serviceIdentifier.toUpperCase()) {
         global.dpvDB = new Map();
         res.sendStatus(200);
-    } else if ("DPI" === req.params.serviceIdentifier.toUpperCase()){
+    } else if ("DPI" === req.params.serviceIdentifier.toUpperCase()) {
         deleteDPIMessages()
             .then(() => {
                 res.sendStatus(200);
             }).catch(() => {
-                res.sendStatus(500);
-            })
+            res.sendStatus(500);
+        })
     } else {
         deleteFiles(`./src/modules/${req.params.serviceIdentifier.toUpperCase()}/uploads`)
             .then(() => {
                 res.sendStatus(200);
             }).catch((err) => {
-                console.log(err);
-                res.sendStatus(500);
+            console.log(err);
+            res.sendStatus(500);
         });
     }
 });
@@ -290,13 +291,13 @@ app.delete('/api/messages/:serviceIdentifier', (req, res) => {
 app.delete('/api/messages/log/:serviceIdentifier', (req, res) => {
     global.dpfDB = new Map();
 
-    if ("DPI" === req.params.serviceIdentifier.toUpperCase()){
+    if ("DPI" === req.params.serviceIdentifier.toUpperCase()) {
         // TODO: delete from dpi mock
         deleteDPIMessageLog()
             .then(() => {
                 res.sendStatus(200);
             }).catch(() => {
-                res.sendStatus(500);
+            res.sendStatus(500);
         })
     } else {
         global.messageLog.set(req.params.serviceIdentifier.toLowerCase(), []);
@@ -364,20 +365,20 @@ app.get('/api/messages/dpi', (req, res) => {
         .then((response) => {
             res.send(JSON.parse(response.text))
         }).catch((err) => {
-            console.log('DPI fetch messages failed!');
-            console.log(err);
-            res.status(500).send();
-        })
+        console.log('DPI fetch messages failed!');
+        console.log(err);
+        res.status(500).send();
+    })
 });
 
 // Set up REST mocks:
 restMocks.forEach((mock) => {
     mock.routes
         .forEach((item) => {
-            if (item.method === 'GET'){
+            if (item.method === 'GET') {
                 app.get(item.path, item.responseFunction)
             } else if (item.method === 'POST') {
-                if (item.middleware){
+                if (item.middleware) {
                     app.post(item.path, item.middleware, item.responseFunction);
                 } else {
                     app.post(item.path, item.responseFunction);
@@ -385,14 +386,14 @@ restMocks.forEach((mock) => {
             } else if (item.method === 'DELETE') {
                 app.delete(item.path, item.responseFunction);
             }
-    });
+        });
 });
 
 
 // Set up SOAP mocks:
 
 // Fetch the WSDLs:
-Promise.all(mocks.map((mock) => fetch(mock.wsdlUrl) ))
+Promise.all(mocks.map((mock) => fetch(mock.wsdlUrl)))
     .then((res) => {
         // Map the WSDL to the mock:
         Promise.all(res.map((res) => res.text()))
@@ -405,17 +406,17 @@ Promise.all(mocks.map((mock) => fetch(mock.wsdlUrl) ))
                         soap.listen(app, mock.pathName, mock.service, mock.wsdl);
                     })
                 });
-        });
-});
+            });
+    });
 
 let restString = restMocks.map((item) => item.routes)
     .reduce((accumulator, current) => accumulator.concat(current))
-    .map((item) => `${item.method} http://localhost:${process.env.PORT}${item.path}`);
+    .map((item) => `${item.method} http://${process.env.MOCK_HOST}:${process.env.PORT}${item.path}`);
 
 let soapString = mocks
-    .map((item) => `http://localhost:${process.env.PORT}${item.pathName}?wsdl`);
+    .map((item) => `http://${process.env.MOCK_HOST}:${process.env.PORT}${item.pathName}?wsdl`);
 
-console.log(`Mocks running on http://localhost:${process.env.PORT}`);
+console.log(`Mocks running on http://${process.env.MOCK_HOST}:${process.env.PORT}`);
 console.log('REST mocks: \n');
 console.log(restString.join('\n'));
 console.log("\n");

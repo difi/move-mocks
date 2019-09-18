@@ -94,7 +94,7 @@ function registerWebHook() {
             .post(`${ipUrl}/api/subscriptions`)
             .send({
                 "name": "MOVE mocks",
-                "pushEndpoint": "http://localhost:3001/incoming",
+                "pushEndpoint": "http://host.docker.internal:3001/incoming",
                 "resource": "all",
                 "event": "status"
             }).then((res) => {

@@ -6,6 +6,7 @@ services:
     command: npm run start
     environment:
       DPI_HOST: ${DPI_HOST}
+      MOCK_HOST: ${MOCK_HOST}
     ports:
       - ${MOCK_PORT}:${MOCK_PORT}
 

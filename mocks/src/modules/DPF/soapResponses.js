@@ -164,7 +164,7 @@ function hentNyeForsendelser(req, res) {
                 "forsendelseType": null,
                 "eksternRef": value.eksternRef,
                 "lenker": [],
-                "downloadUrl": `http://localhost:${process.env.PORT}/tjenester/svarinn/forsendelse/${value.eksternRef}`
+                "downloadUrl": `http://${process.env.MOCK_HOST}:${process.env.PORT}/tjenester/svarinn/forsendelse/${value.eksternRef}`
             };
 
 
