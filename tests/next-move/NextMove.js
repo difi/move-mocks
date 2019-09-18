@@ -3,7 +3,7 @@ const {StandardBusinessDocument, dpiSbd, dpeInnsynSbd, dpiSbdFysisk, dpiSbdDigit
 const path = require('path');
 const fs = require('fs');
 const request = require('request');
-const ipUrl = 'http://localhost:9093';
+process.env.TEST_HOST = process.env.TEST_HOST || 'localhost';
 const endpoint = 'api/messages/out';
 const program = require('commander');
 const crypto = require('crypto');
@@ -11,6 +11,7 @@ const express = require('express');
 const uuidv1 = require('uuid/v1');
 const bodyParser = require('body-parser');
 const batchSize = 100;
+let ipUrl = `http://${process.env.TEST_HOST}:9093`;
 
 program
     .version('0.1.0')
@@ -94,7 +95,7 @@ function registerWebHook() {
             .post(`${ipUrl}/api/subscriptions`)
             .send({
                 "name": "MOVE mocks",
-                "pushEndpoint": "http://host.docker.internal:3001/incoming",
+                "pushEndpoint": `http://${process.env.TEST_HOST}:3001/incoming`,
                 "resource": "all",
                 "event": "status"
             }).then((res) => {
